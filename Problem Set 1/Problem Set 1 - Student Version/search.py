@@ -42,8 +42,28 @@ def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
 
 def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
-    
+    frontier: list[S] = []
+    paths : list[A] = []
+    frontier.append(initial_state)
+    paths.append([])
+    explored = set()
+    while len(frontier) > 0:
+        state = frontier.pop()
+        path = paths.pop()
+        if problem.is_goal(state):
+            return path
+        if state in explored:
+            continue
+        explored.add(state)
+        actions = problem.get_actions(state)
+        for action in actions:
+            successor = problem.get_successor(state, action)
+            new_path = list(path)
+            new_path.append(action)
+            if successor not in explored:
+                frontier.append(successor)
+                paths.append(new_path)
+    return None
 
 def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
