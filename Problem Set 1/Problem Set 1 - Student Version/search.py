@@ -68,8 +68,8 @@ def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
 def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
     counter:int =0
-    frontier: PriorityQueue[(int,int,S)] = PriorityQueue()
-    paths : PriorityQueue[(int,int,list[A])] = PriorityQueue()
+    frontier: PriorityQueue[(float,int,S)] = PriorityQueue()
+    paths : PriorityQueue[(float,int,list[A])] = PriorityQueue()
     frontier.put((0,counter,initial_state))
     paths.put((0,counter,[]))
     counter+=1
@@ -95,7 +95,33 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
 
 def AStarSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    counter:int =0
+    frontier: PriorityQueue[(float,int,S,float)] = PriorityQueue()
+    paths : PriorityQueue[(float,int,list[A])] = PriorityQueue()
+    frontier.put((0+heuristic(problem,initial_state),counter,initial_state,0))
+    paths.put((0+heuristic(problem,initial_state),counter,[]))
+    counter+=1
+    explored = set()
+    while not frontier.empty():
+        _,_,state,cost = frontier.get()
+        _,_,path = paths.get()
+        if problem.is_goal(state):
+            return path
+        if state in explored:
+            continue
+        explored.add(state)
+        actions = problem.get_actions(state)
+        for action in actions:
+            successor = problem.get_successor(state, action)
+            new_path = list(path)
+            new_path.append(action)
+            if successor not in explored:
+                curr_cost = problem.get_cost(state,action)
+                curr_h =heuristic(problem,successor)
+                frontier.put((cost+curr_h+curr_cost,counter,successor,cost+curr_cost))
+                paths.put((cost+curr_h+curr_cost,counter,new_path))
+                counter+=1
+
 
 def BestFirstSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
     #TODO: ADD YOUR CODE HERE
