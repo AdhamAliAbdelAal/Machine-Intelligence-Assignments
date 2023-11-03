@@ -88,22 +88,23 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             new_path = list(path)
             new_path.append(action)
             if successor not in explored:
-                frontier.put((cost+problem.get_cost(state,action),counter,successor))
-                paths.put((cost+problem.get_cost(state,action),counter,new_path))
+                curr_cost = problem.get_cost(state,action)
+                frontier.put((cost+curr_cost,counter,successor))
+                paths.put((cost+curr_cost,counter,new_path))
                 counter+=1
 
 
 def AStarSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
     #TODO: ADD YOUR CODE HERE
     counter:int =0
-    frontier: PriorityQueue[(float,int,S,float)] = PriorityQueue()
+    frontier: PriorityQueue[(float,int,S)] = PriorityQueue()
     paths : PriorityQueue[(float,int,list[A])] = PriorityQueue()
-    frontier.put((0+heuristic(problem,initial_state),counter,initial_state,0))
+    frontier.put((0+heuristic(problem,initial_state),counter,initial_state))
     paths.put((0+heuristic(problem,initial_state),counter,[]))
     counter+=1
     explored = set()
     while not frontier.empty():
-        _,_,state,cost = frontier.get()
+        cost,_,state = frontier.get()
         _,_,path = paths.get()
         if problem.is_goal(state):
             return path
@@ -111,15 +112,16 @@ def AStarSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFu
             continue
         explored.add(state)
         actions = problem.get_actions(state)
+        h = heuristic(problem,state)
         for action in actions:
             successor = problem.get_successor(state, action)
             new_path = list(path)
             new_path.append(action)
             if successor not in explored:
                 curr_cost = problem.get_cost(state,action)
-                curr_h =heuristic(problem,successor)
-                frontier.put((cost+curr_h+curr_cost,counter,successor,cost+curr_cost))
-                paths.put((cost+curr_h+curr_cost,counter,new_path))
+                curr_h = heuristic(problem,successor)
+                frontier.put((cost+curr_cost+curr_h-h,counter,successor))
+                paths.put((cost+curr_cost+curr_h-h,counter,new_path))
                 counter+=1
 
 
