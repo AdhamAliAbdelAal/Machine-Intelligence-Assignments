@@ -92,6 +92,7 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
                 frontier.put((cost+curr_cost,counter,successor))
                 paths.put((cost+curr_cost,counter,new_path))
                 counter+=1
+    return None
 
 
 def AStarSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
@@ -123,8 +124,37 @@ def AStarSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFu
                 frontier.put((cost+curr_cost+curr_h-h,counter,successor))
                 paths.put((cost+curr_cost+curr_h-h,counter,new_path))
                 counter+=1
+    return None
+    
 
 
 def BestFirstSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    counter:int =0
+    frontier: PriorityQueue[(float,int,S)] = PriorityQueue()
+    paths : PriorityQueue[(float,int,list[A])] = PriorityQueue()
+    frontier.put((heuristic(problem,initial_state),counter,initial_state))
+    paths.put((heuristic(problem,initial_state),counter,[]))
+    counter+=1
+    explored = set()
+    while not frontier.empty():
+        _,_,state = frontier.get()
+        _,_,path = paths.get()
+        if problem.is_goal(state):
+            return path
+        if state in explored:
+            continue
+        explored.add(state)
+        actions = problem.get_actions(state)
+        for action in actions:
+            successor = problem.get_successor(state, action)
+            new_path = list(path)
+            new_path.append(action)
+            if problem.is_goal(state):
+                return path
+            if successor not in explored:
+                curr_h = heuristic(problem,successor)
+                frontier.put((curr_h,counter,successor))
+                paths.put((curr_h,counter,new_path))
+                counter+=1
+    return None
