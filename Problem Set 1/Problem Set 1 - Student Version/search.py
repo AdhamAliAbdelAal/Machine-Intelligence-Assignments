@@ -1,6 +1,8 @@
 from problem import HeuristicFunction, Problem, S, A, Solution
 from collections import deque
 from helpers.utils import NotImplemented
+from queue import Queue
+
 
 #TODO: Import any modules you want to use
 import heapq
@@ -15,7 +17,25 @@ import heapq
 
 def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    frontier: Queue[list[S]] = Queue()
+    frontier.put([initial_state])
+    explored = set()
+    while not frontier.empty():
+        curr_path = frontier.get()
+        state = curr_path[-1]
+        if state in explored:
+            continue
+        explored.add(state)
+        actions = problem.get_actions(state)
+        for action in actions:
+            successor = problem.get_successor(state, action)
+            new_path = list(curr_path)
+            new_path.append(successor)
+            if problem.is_goal(successor):
+                return new_path[1:]
+            if successor not in explored:
+                frontier.put(new_path)
+    return None
 
 def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
