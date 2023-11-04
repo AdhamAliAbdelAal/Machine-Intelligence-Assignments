@@ -21,27 +21,49 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
     # This function should return the initial state
     def get_initial_state(self) -> ParkingState:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        initial_state : ParkingState = {}
+        for index, value in enumerate(self.cars):
+            initial_state[index] = value
+        return initial_state
+
     
     # This function should return True if the given state is a goal. Otherwise, it should return False.
     def is_goal(self, state: ParkingState) -> bool:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        for key,val in state.items():
+            if ((val not in self.slots) or (key != self.slots[val])):
+                return False
+        return True
     
     # This function returns a list of all the possible actions that can be applied to the given state
     def get_actions(self, state: ParkingState) -> List[ParkingAction]:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        actions : List[ParkingAction] = []
+        locations_with_cars = set(state.values())
+        for index, value in state.items():
+            for direction in Direction:
+                new_pos = value + direction.to_vector()
+                if ((new_pos in self.passages) and (new_pos not in locations_with_cars)):
+                    actions.append((index,direction))
+        return actions
     
     # This function returns a new state which is the result of applying the given action to the given state
     def get_successor(self, state: ParkingState, action: ParkingAction) -> ParkingState:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        new_state = dict(state)
+        car_index, direction = action
+        new_state[car_index] += direction.to_vector()
+        return new_state
     
     # This function returns the cost of applying the given action to the given state
     def get_cost(self, state: ParkingState, action: ParkingAction) -> float:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        index, direction = action
+        new_pos = state[index] + direction.to_vector()
+        cost = 26 - index
+        if(new_pos in self.slots  and self.slots[new_pos] != index):
+            cost+=100
+        return cost
     
      # Read a parking problem from text containing a grid of tiles
     @staticmethod
