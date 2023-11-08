@@ -8,6 +8,7 @@ def weak_heuristic(problem: SokobanProblem, state: SokobanState):
     return min(manhattan_distance(state.player, crate) for crate in state.crates) - 1
 
 #TODO: Import any modules and write any functions you want to use
+import math
 
 
 def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
@@ -17,4 +18,16 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # which is the number of get_actions calls during the search
     #NOTE: you can use problem.cache() to get a dictionary in which you can store information that will persist between calls of this function
     # This could be useful if you want to store the results heavy computations that can be cached and used across multiple calls of this function
-    NotImplemented()
+    player = state.player
+    crates = state.crates
+    goals = problem.layout.goals
+    sum = 0
+    for crate in crates:
+        min_distance = math.inf
+        for goal in goals:
+            distance = manhattan_distance(crate, goal)
+            if distance < min_distance:
+                min_distance = distance
+        sum += min_distance
+    return sum +weak_heuristic(problem, state)
+    
