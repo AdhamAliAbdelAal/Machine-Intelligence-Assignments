@@ -21,13 +21,51 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     player = state.player
     crates = state.crates
     goals = problem.layout.goals
-    sum = 0
+    walkable = problem.layout.walkable
+    prev_heuristic = problem.cache().get("prev_heuristic", 0)
+    prev_crates = problem.cache().get("prev_crates",None)
+    if(prev_crates == crates):
+        return prev_heuristic
+    prev_heuristic = 0
+    problem.cache()["prev_crates"] = crates
+
+    # check if there is a deadlock for the current crate
+    def is_deadlock(crate, walkable):
+        directions = [False]*4
+        for direction in Direction:
+            if(crate + direction.to_vector() not in walkable):
+                directions[direction] = True
+        # (left or right) and (up or down) are blocked 
+        if(directions[Direction.LEFT] or directions[Direction.RIGHT]) and (directions[Direction.UP] or directions[Direction.DOWN]):
+            return True
+    
+    # check if there are deadlocks
     for crate in crates:
+        if(crate in goals):
+            continue
+        if(is_deadlock(crate, walkable)):
+            # print("hello")
+
+            prev_heuristic = math.inf
+            problem.cache()["prev_heuristic"] = prev_heuristic
+            return math.inf
+    # get the unassigned crates
+    unassigned_crates = crates.difference(goals)
+    # print(state)
+    for crate in unassigned_crates:
+        # get the distance to the nearest goal
         min_distance = math.inf
         for goal in goals:
             distance = manhattan_distance(crate, goal)
-            if distance < min_distance:
+            if(distance < min_distance):
                 min_distance = distance
-        sum += min_distance
-    return sum +weak_heuristic(problem, state)
-    
+            # print(min_distance)
+        prev_heuristic += min_distance
+    problem.cache()["prev_heuristic"] = prev_heuristic
+
+    # if(prev_heuristic == 4):
+        # print(unassigned_crates)
+    # print(prev_heuristic)
+    # if(prev_heuristic == 10 or prev_heuristic==12):
+    #     print(temp)
+    return prev_heuristic
