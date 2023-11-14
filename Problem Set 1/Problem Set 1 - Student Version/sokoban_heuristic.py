@@ -22,50 +22,96 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     crates = state.crates
     goals = problem.layout.goals
     walkable = problem.layout.walkable
-    prev_heuristic = problem.cache().get("prev_heuristic", 0)
-    prev_crates = problem.cache().get("prev_crates",None)
-    if(prev_crates == crates):
-        return prev_heuristic
-    prev_heuristic = 0
-    problem.cache()["prev_crates"] = crates
 
     # check if there is a deadlock for the current crate
-    def is_deadlock(crate, walkable):
-        directions = [False]*4
+    def is_deadlock(crate, walkable,crates,goals):
+        directions_walls = [False]*4
+        directions_crates = [False]*4
+        cnt = 0
         for direction in Direction:
             if(crate + direction.to_vector() not in walkable):
-                directions[direction] = True
+                directions_walls[direction] = True
+                cnt+=1
+            if(crate + direction.to_vector() in crates):
+                directions_crates[direction] = True
         # (left or right) and (up or down) are blocked 
-        if(directions[Direction.LEFT] or directions[Direction.RIGHT]) and (directions[Direction.UP] or directions[Direction.DOWN]):
+        if(directions_walls[Direction.LEFT] or directions_walls[Direction.RIGHT]) and (directions_walls[Direction.UP] or directions_walls[Direction.DOWN]):
             return True
+        if(cnt>2):
+            return True
+        directions_all = [False]*4
+        for i in range(4):
+            directions_all[i] = directions_walls[i] or directions_crates[i]
+        
+        # check if the crate is in square deadlock of walls or crates 
+        # case one the crate is the left upper corner of the square
+        if(directions_all[Direction.RIGHT] and directions_all[Direction.DOWN]):
+            right_down = crate + Direction.RIGHT.to_vector() + Direction.DOWN.to_vector()
+            if(right_down not in walkable):
+                return True
+            if(right_down in crates):
+                return True
+        # case two the crate is the right upper corner of the square
+        if(directions_all[Direction.LEFT] and directions_all[Direction.DOWN]):
+            left_down = crate + Direction.LEFT.to_vector() + Direction.DOWN.to_vector()
+            if(left_down not in walkable):
+                return True
+            if(left_down in crates):
+                return True
+            
+        # case three the crate is the left down corner of the square
+        if(directions_all[Direction.RIGHT] and directions_all[Direction.UP]):
+            right_up = crate + Direction.RIGHT.to_vector() + Direction.UP.to_vector()
+            if(right_up not in walkable):
+                return True
+            if(right_up in crates):
+                return True
+            
+        # case four the crate is the right down corner of the square
+        if(directions_all[Direction.LEFT] and directions_all[Direction.UP]):
+            left_up = crate + Direction.LEFT.to_vector() + Direction.UP.to_vector()
+            if(left_up not in walkable):
+                return True
+            if(left_up in crates):
+                return True
+            
+        # crate against the goal
+        goal = None
+        for it_goal in goals:
+            if(it_goal in crates):
+                continue
+            if(goal is None or manhattan_distance(it_goal,crate)<manhattan_distance(goal,crate)):
+                goal = it_goal
+        if(crate.x==1 and goal.x>1):
+            return True
+        if(crate.x==problem.layout.width-2 and goal.x<problem.layout.width-2):
+            return True
+        if(crate.y==1 and goal.y>1):   
+            return True
+        if(crate.y==problem.layout.height-2 and goal.y<problem.layout.height-2):
+            return True
+        return False        
     
     # check if there are deadlocks
     for crate in crates:
         if(crate in goals):
             continue
-        if(is_deadlock(crate, walkable)):
-            # print("hello")
-
-            prev_heuristic = math.inf
-            problem.cache()["prev_heuristic"] = prev_heuristic
+        if(is_deadlock(crate, walkable,crates,goals)):
             return math.inf
-    # get the unassigned crates
+        
     unassigned_crates = crates.difference(goals)
     # print(state)
+    sum = 0
+    mx = math.inf
     for crate in unassigned_crates:
         # get the distance to the nearest goal
         min_distance = math.inf
         for goal in goals:
             distance = manhattan_distance(crate, goal)
+            mx = min(mx, distance)
             if(distance < min_distance):
                 min_distance = distance
-            # print(min_distance)
-        prev_heuristic += min_distance
-    problem.cache()["prev_heuristic"] = prev_heuristic
-
-    # if(prev_heuristic == 4):
-        # print(unassigned_crates)
-    # print(prev_heuristic)
-    # if(prev_heuristic == 10 or prev_heuristic==12):
-    #     print(temp)
-    return prev_heuristic
+        sum += min_distance
+    if(sum == 0):
+        return 0
+    return sum

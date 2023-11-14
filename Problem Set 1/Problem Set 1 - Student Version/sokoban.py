@@ -123,8 +123,11 @@ class SokobanProblem(Problem[SokobanState, Direction]):
         player: Point = None
         lines = [line for line in (line.strip() for line in text.splitlines()) if line]
         width, height = max(len(line) for line in lines), len(lines)
+        # print(lines)
         for y, line in enumerate(lines):
             for x, char in enumerate(line):
+                # if(char==SokobanTile.WALL):
+                #     print(x,y)
                 if char != SokobanTile.WALL:
                     walkable.add(Point(x, y))
                     if char == SokobanTile.PLAYER:
