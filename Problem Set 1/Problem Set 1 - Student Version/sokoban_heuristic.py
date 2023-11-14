@@ -18,13 +18,20 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # which is the number of get_actions calls during the search
     #NOTE: you can use problem.cache() to get a dictionary in which you can store information that will persist between calls of this function
     # This could be useful if you want to store the results heavy computations that can be cached and used across multiple calls of this function
-    player = state.player
     crates = state.crates
     goals = problem.layout.goals
     walkable = problem.layout.walkable
 
+    prev_crate = problem.cache().get("prev_crate", None)
+    prev_heuristic = problem.cache().get("prev_heuristic", None)
+    if(crates == prev_crate):
+        return prev_heuristic
+    problem.cache()["prev_crate"] = crates
+    problem.cache()["prev_heuristic"] = math.inf
+    prev_heuristic = math.inf
+
     # check if there is a deadlock for the current crate
-    def is_deadlock(crate, walkable,crates,goals):
+    def is_deadlock(crate):
         directions_walls = [False]*4
         directions_crates = [False]*4
         cnt = 0
@@ -96,22 +103,19 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     for crate in crates:
         if(crate in goals):
             continue
-        if(is_deadlock(crate, walkable,crates,goals)):
+        if(is_deadlock(crate)):
             return math.inf
         
     unassigned_crates = crates.difference(goals)
-    # print(state)
     sum = 0
-    mx = math.inf
     for crate in unassigned_crates:
         # get the distance to the nearest goal
         min_distance = math.inf
         for goal in goals:
             distance = manhattan_distance(crate, goal)
-            mx = min(mx, distance)
             if(distance < min_distance):
                 min_distance = distance
         sum += min_distance
-    if(sum == 0):
-        return 0
+    prev_heuristic = sum
+    problem.cache()["prev_heuristic"] = prev_heuristic
     return sum
