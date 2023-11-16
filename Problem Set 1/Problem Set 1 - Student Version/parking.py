@@ -22,6 +22,7 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
     def get_initial_state(self) -> ParkingState:
         #TODO: ADD YOUR CODE HERE
         initial_state : ParkingState = {}
+        # assign each car to its initial position
         for index, value in enumerate(self.cars):
             initial_state[index] = value
         return initial_state
@@ -30,6 +31,7 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
     # This function should return True if the given state is a goal. Otherwise, it should return False.
     def is_goal(self, state: ParkingState) -> bool:
         #TODO: ADD YOUR CODE HERE
+        # check if all cars are in their slots
         for key,val in state.items():
             if ((val not in self.slots) or (key != self.slots[val])):
                 return False
@@ -39,10 +41,14 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
     def get_actions(self, state: ParkingState) -> List[ParkingAction]:
         #TODO: ADD YOUR CODE HERE
         actions : List[ParkingAction] = []
+        # get all locations of cars
         locations_with_cars = set(state.values())
+        # iterate over all cars
         for index, value in state.items():
             for direction in Direction:
                 new_pos = value + direction.to_vector()
+                # check if the new position is a passage and does not contain a car
+                # then it is a valid action
                 if ((new_pos in self.passages) and (new_pos not in locations_with_cars)):
                     actions.append((index,direction))
         return actions
@@ -60,12 +66,14 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
         #TODO: ADD YOUR CODE HERE
         index, direction = action
         new_pos = state[index] + direction.to_vector()
+        # if the index is 0 (A) then the cost is 26 if the index is 25 (Z) then the cost is 1 (least ranking employee)
         cost = 26 - index
+        # if the new position is a slot and it is not the slot of the current car then add 100 to the cost
         if(new_pos in self.slots  and self.slots[new_pos] != index):
             cost+=100
         return cost
     
-     # Read a parking problem from text containing a grid of tiles
+    # Read a parking problem from text containing a grid of tiles
     @staticmethod
     def from_text(text: str) -> 'ParkingProblem':
         passages =  set()
