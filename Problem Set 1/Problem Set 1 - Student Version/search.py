@@ -39,68 +39,107 @@ def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
         # return the path if the state is the goal
         actions = problem.get_actions(state)
         for action in actions:
+            # get the successor of the state
             successor = problem.get_successor(state, action)
+            # get the old path
             new_path = list(path)
+            # add the action to the new path
             new_path.append(action)
+            # if the successor is the goal then return the path
             if problem.is_goal(successor):
                 return new_path
+            # if the successor is not explored then add it to the frontier and paths
             if successor not in explored:
                 frontier.put(successor)
                 paths.put(new_path)
+    # return None if there is no solution
     return None
 
 def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
+    # frontier to hold the states (stack)
     frontier: list[S] = []
+    # paths to hold the paths (stack)
     paths : list[A] = []
+    # put the initial state in the frontier and paths
     frontier.append(initial_state)
     paths.append([])
+    # explored to keep track of the explored states
     explored = set()
     while len(frontier) > 0:
+        # get the state
         state = frontier.pop()
+        # get the path
         path = paths.pop()
+        # if the state is the goal then return the path
         if problem.is_goal(state):
             return path
+        # if the state is in the explored set then continue (if it pushed multiple times to the frontier)
         if state in explored:
             continue
+        # add the state to the explored set
         explored.add(state)
+        # get all actions of the state
         actions = problem.get_actions(state)
         for action in actions:
+            # get the successor of the state
             successor = problem.get_successor(state, action)
+            # get the old path
             new_path = list(path)
+            # add the action to the new path
             new_path.append(action)
+            # if the successor is not explored then add it to the frontier and paths
             if successor not in explored:
                 frontier.append(successor)
                 paths.append(new_path)
+    # return None if there is no solution
     return None
 
 def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
     counter:int =0
+    # frontier to hold the states
     frontier: PriorityQueue[(float,int,S)] = PriorityQueue()
+    # paths to hold the paths
     paths : PriorityQueue[(float,int,list[A])] = PriorityQueue()
+    # put the initial state in the frontier and paths
     frontier.put((0,counter,initial_state))
     paths.put((0,counter,[]))
+    # counter to handle when there are multiple states at the queue's front with the same priority, pick the state that was enqueued first (first in first out).
     counter+=1
+    # explored to keep track of the explored states
     explored = set()
     while not frontier.empty():
+        # get the state , cost and ignore counter
         cost,_,state = frontier.get()
+        # get the path only as the first element is the priority and the second is the counter
         _,_,path = paths.get()
+        # return the path if the state is the goal
         if problem.is_goal(state):
             return path
+        # if the state is explored then continue (if it pushed multiple times to the frontier)
         if state in explored:
             continue
+        # add the state to the explored set
         explored.add(state)
+        # get all actions of the state
         actions = problem.get_actions(state)
         for action in actions:
+            # get the successor of the state
             successor = problem.get_successor(state, action)
+            # get the old path
             new_path = list(path)
+            # add the action to the new path
             new_path.append(action)
+            # if the successor is not explored then add it to the frontier and paths
             if successor not in explored:
+                #calculate the cost of the action
                 curr_cost = problem.get_cost(state,action)
+                # add the current arc cost to the the total cost
                 frontier.put((cost+curr_cost,counter,successor))
                 paths.put((cost+curr_cost,counter,new_path))
                 counter+=1
+    # return None if there is no solution
     return None
 
 
@@ -190,7 +229,7 @@ def BestFirstSearch(problem: Problem[S, A], initial_state: S, heuristic: Heurist
         for action in actions:
             # get the successor of the state
             successor = problem.get_successor(state, action)
-            # get the new path
+            # get the old path
             new_path = list(path)
             # add the action to the new path
             new_path.append(action)
