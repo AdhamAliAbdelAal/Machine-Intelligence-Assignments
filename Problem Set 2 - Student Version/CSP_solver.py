@@ -112,6 +112,31 @@ def least_restraining_values(problem: Problem, variable_to_assign: str, domains:
 #            for every assignment including the initial empty assignment, EXCEPT for the assignments pruned by the forward checking.
 #            Also, if 1-Consistency deems the whole problem unsolvable, you shouldn't call "problem.is_complete" at all.
 def solve(problem: Problem) -> Optional[Assignment]:
-    #TODO: Write this function
-    NotImplemented()
-    
+    unary_constraints = [constraint for constraint in problem.constraints if isinstance(constraint, UnaryConstraint)]
+    domains: Dict[str, set] = problem.domains.copy()
+    # 1-Consistency
+    for constraint in unary_constraints:
+        variable = constraint.variable
+        domains[variable] = {value for value in domains[variable] if constraint.condition(value)}
+        if not domains[variable]:
+            return None
+    # backtracking search with forward checking
+    return backtracking_search(problem, {}, domains)
+
+def backtracking_search(problem: Problem, assignment: Assignment, domains: Dict[str,set]) -> Optional[Assignment]:
+    if problem.is_complete(assignment):
+        return assignment
+    # print(domains)
+    variable = minimum_remaining_values(problem, domains)
+    # print(variable)
+    values = least_restraining_values(problem, variable, domains)
+    # remove the variable from the domains
+    domains.pop(variable)
+    for value in values:
+        if forward_checking(problem, variable, value, domains):
+            assignment[variable] = value
+            result = backtracking_search(problem, assignment, domains)
+            if result is not None:
+                return result
+            assignment.pop(variable)
+    return None
