@@ -54,7 +54,9 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
         # update the other variable's domain 
         temp_set = set()
         for value in domains[other_variable]:
-            if not constraint.condition(assigned_value, value):
+            first_value = assigned_value if assigned_variable == constraint.variables[0] else value
+            second_value = assigned_value if assigned_variable == constraint.variables[1] else value
+            if not constraint.condition(first_value, second_value):
                 temp_set.add(value)
         domains[other_variable] -= temp_set
         # if any variable's domain becomes empty, return False
@@ -75,8 +77,30 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
 # IMPORTANT: Don't use the domains inside the problem, use and modify the ones given by the "domains" argument 
 #            since they contain the current domains of unassigned variables only.
 def least_restraining_values(problem: Problem, variable_to_assign: str, domains: Dict[str, set]) -> List[Any]:
-    #TODO: Write this function
-    NotImplemented()
+    binary_constraints = [constraint for constraint in problem.constraints if isinstance(constraint, BinaryConstraint) and variable_to_assign in constraint.variables]
+
+    def sort_key(assigned_value):
+        count = 0
+        domains_copy = domains.copy()
+        for constraint in binary_constraints:
+            # get the other involved variable
+            other_variable = constraint.get_other(variable_to_assign)
+            # if the other variable has no domain, skip this constraint
+            if other_variable not in domains_copy:
+                continue
+            # update the other variable's domain 
+            temp = len(domains_copy[other_variable])
+            for value in domains_copy[other_variable]:
+                first_value = assigned_value if variable_to_assign == constraint.variables[0] else value
+                second_value = assigned_value if variable_to_assign == constraint.variables[1] else value
+                if not constraint.condition(first_value, second_value):
+                    temp -= 1
+            count+=temp
+        # print(assigned_value,count)
+        return count
+    
+    return sorted(list(domains[variable_to_assign]), key=sort_key, reverse=True)
+
 
 # This function should solve CSP problems using backtracking search with forward checking.
 # The variable ordering should be decided by the MRV heuristic.
