@@ -76,29 +76,30 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
 #            order them in ascending order (from the lowest to the highest value).
 # IMPORTANT: Don't use the domains inside the problem, use and modify the ones given by the "domains" argument 
 #            since they contain the current domains of unassigned variables only.
+import copy
 def least_restraining_values(problem: Problem, variable_to_assign: str, domains: Dict[str, set]) -> List[Any]:
     binary_constraints = [constraint for constraint in problem.constraints if isinstance(constraint, BinaryConstraint) and variable_to_assign in constraint.variables]
-
     def sort_key(assigned_value):
-        count = 0
-        domains_copy = domains.copy()
+        neighbors = set()      
+        domains_copy = copy.deepcopy(domains)
         for constraint in binary_constraints:
             # get the other involved variable
             other_variable = constraint.get_other(variable_to_assign)
             # if the other variable has no domain, skip this constraint
             if other_variable not in domains_copy:
                 continue
-            # update the other variable's domain 
-            temp = len(domains_copy[other_variable])
+            neighbors.add(other_variable)
+            temp = set()
             for value in domains_copy[other_variable]:
                 first_value = assigned_value if variable_to_assign == constraint.variables[0] else value
                 second_value = assigned_value if variable_to_assign == constraint.variables[1] else value
                 if not constraint.condition(first_value, second_value):
-                    temp -= 1
-            count+=temp
-        # print(assigned_value,count)
-        return count
-    
+                    temp.add(value)
+            domains_copy[other_variable] -= temp
+        count = 0
+        for neighbor in neighbors:
+            count += len(domains_copy[neighbor])
+        return (count, -assigned_value)
     return sorted(list(domains[variable_to_assign]), key=sort_key, reverse=True)
 
 
@@ -113,7 +114,7 @@ def least_restraining_values(problem: Problem, variable_to_assign: str, domains:
 #            Also, if 1-Consistency deems the whole problem unsolvable, you shouldn't call "problem.is_complete" at all.
 def solve(problem: Problem) -> Optional[Assignment]:
     unary_constraints = [constraint for constraint in problem.constraints if isinstance(constraint, UnaryConstraint)]
-    domains: Dict[str, set] = problem.domains.copy()
+    domains = copy.deepcopy(problem.domains)
     # 1-Consistency
     for constraint in unary_constraints:
         variable = constraint.variable
@@ -126,17 +127,17 @@ def solve(problem: Problem) -> Optional[Assignment]:
 def backtracking_search(problem: Problem, assignment: Assignment, domains: Dict[str,set]) -> Optional[Assignment]:
     if problem.is_complete(assignment):
         return assignment
-    # print(domains)
     variable = minimum_remaining_values(problem, domains)
-    # print(variable)
     values = least_restraining_values(problem, variable, domains)
-    # remove the variable from the domains
-    domains.pop(variable)
+    domains_copy = copy.deepcopy(domains)
     for value in values:
+        domains = copy.deepcopy(domains_copy)
+        domains.pop(variable)
         if forward_checking(problem, variable, value, domains):
             assignment[variable] = value
             result = backtracking_search(problem, assignment, domains)
             if result is not None:
                 return result
             assignment.pop(variable)
+    domains = copy.deepcopy(domains_copy)
     return None
