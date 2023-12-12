@@ -122,7 +122,9 @@ def solve(problem: Problem) -> Optional[Assignment]:
         if not domains[variable]:
             return None
     # backtracking search with forward checking
-    return backtracking_search(problem, {}, domains)
+    assignment = {}
+    ret = backtracking_search(problem, assignment, domains)
+    return ret
 
 def backtracking_search(problem: Problem, assignment: Assignment, domains: Dict[str,set]) -> Optional[Assignment]:
     if problem.is_complete(assignment):
