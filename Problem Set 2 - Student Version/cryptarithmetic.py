@@ -160,21 +160,16 @@ class CryptArithmeticProblem(Problem):
             problem.constraints.append(BinaryConstraint((x1, result), condition_x1_result))
             problem.constraints.append(BinaryConstraint((x1, c2), condition_x1_c2))
 
-            # print(f'{var} + {c1} = {result} + {c2}')
-            # print(f'{x1} = ({c1} , {var})')
-
         def equal_carry_and_result(c1, result):
             def condition_c1_result(c1_val, result_val):
                 return c1_val == result_val
 
             problem.constraints.append(BinaryConstraint((c1, result), condition_c1_result))
-            # print(f'{c1} = {result}')
 
         carry = "c0"
         # add c10 to the problem
         problem.variables.append(carry)
         problem.domains[carry] = set(range(1))
-        # print(f'{LHS0} + {LHS1} = {RHS}')
         # sum 2 vars and carry
         for i in range(min_len):
             var1 = LHS0[i]
@@ -200,8 +195,6 @@ class CryptArithmeticProblem(Problem):
             carry = f"c{max_len}"
             problem.constraints.append(UnaryConstraint(carry, lambda x: x == 0))
 
-        # print(len(problem.variables))
-        # print(len(problem.domains))
         return problem
 
     # Read a cryptarithmetic puzzle from a file

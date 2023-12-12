@@ -29,8 +29,44 @@ def greedy(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: 
 # for all the agents. So to get the value for the player (which acts at the max nodes), you need to
 # get values[0].
 def minimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
-    #TODO: Complete this function
-    NotImplemented()
+    hue = heuristic(game, state, 0)
+    terminal, values = game.is_terminal(state)
+    if terminal:
+        return values[0], None
+    if max_depth == 0:
+        return hue, None 
+
+    actions = game.get_actions(state)
+    def min_function(state: S) -> Tuple[float, A]:
+        value = float('inf')
+        action = None
+        for a in actions:
+            successor = game.get_successor(state, a)
+            v, _ = minimax(game, successor, heuristic, max_depth- 1)
+            if v < value:
+                value = v
+                action = a
+        return value, action
+    
+    def max_function(state: S) -> Tuple[float, A]:
+        value = float('-inf')
+        action = None
+        for a in actions:
+            successor = game.get_successor(state, a)
+            v, _ = minimax(game, successor, heuristic, max_depth-1)
+            if v > value:
+                value = v
+                action = a
+        return value, action
+    turn = game.get_turn(state)
+    if turn == 0:
+        return max_function(state)
+    else:
+        return min_function(state)
+
+        
+
+
 
 # Apply Alpha Beta pruning and return the tree value and the best action
 # Hint: Read the hint for minimax.
