@@ -118,8 +118,58 @@ def alphabeta(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_dept
 # Apply Alpha Beta pruning with move ordering and return the tree value and the best action
 # Hint: Read the hint for minimax.
 def alphabeta_with_move_ordering(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
-    #TODO: Complete this function
-    NotImplemented()
+    def solve(state: S, max_depth: int, alpha: float, beta: float) -> Tuple[float, A]:
+            hue = heuristic(game, state, 0)
+            terminal, values = game.is_terminal(state)
+            if terminal:
+                return values[0], None
+            if max_depth == 0:
+                return hue, None 
+
+            actions = game.get_actions(state)
+            def min_function(state: S, alpha: float, beta: float) -> Tuple[float, A]:
+                value = float('inf')
+                action = None
+                def order(a):
+                    successor = game.get_successor(state, a)
+                    v = heuristic(game, successor, 0)
+                    return v
+                actions.sort(key=order)
+                for a in actions:
+                    successor = game.get_successor(state, a)
+                    v, _ = solve(successor, max_depth- 1, alpha, beta)
+                    if(v <= alpha):
+                        return v, a
+                    beta = min(beta, v)
+                    if v < value:
+                        value = v
+                        action = a
+                return value, action
+            
+            def max_function(state: S, alpha: int, beta: int) -> Tuple[float, A]:
+                value = float('-inf')
+                action = None
+                def order(a):
+                    successor = game.get_successor(state, a)
+                    v = heuristic(game, successor, 0)
+                    return v
+                actions.sort(key=order, reverse=True)
+                for a in actions:
+                    successor = game.get_successor(state, a)
+                    v, _ = solve(successor, max_depth- 1, alpha, beta)
+                    if(v >= beta):
+                        return v, a
+                    alpha = max(alpha, v)
+                    if v > value:
+                        value = v
+                        action = a
+                return value, action
+            turn = game.get_turn(state)
+            if turn == 0:
+                return max_function(state, alpha, beta)
+            else:
+                return min_function(state, alpha, beta)
+    return solve(state, max_depth, float('-inf'), float('inf'))
 
 # Apply Expectimax search and return the tree value and the best action
 # Hint: Read the hint for minimax, but note that the monsters (turn > 0) do not act as min nodes anymore,
