@@ -115,32 +115,20 @@ class CryptArithmeticProblem(Problem):
 
             problem.constraints.append(BinaryConstraint((t1, t2), condition_t1_t2))
             problem.constraints.append(BinaryConstraint((c1, t2), condition_c1_t2))
-            # t3 = d + c2 (concatenate c2 and d) domain: [0, 19]
-            # add t3 to the problem
-            t3 = f"t3{i}"
-            problem.variables.append(t3)
-            problem.domains[t3] = set(range(20))
 
-            def condition_d_t3(d, t3_val):
-                return d == t3_val % 10
+            # t2 = d + c2
+            def condition_t2_result(t2_val, result_val):
+                return sum([int(digit) for digit in str(t2_val)]) % 10 == result_val
 
-            def condition_c2_t3(c2_val, t3_val):
-                return c2_val == t3_val // 10
+            def condition_t2_c2(t2_val, c2_val):
+                return sum([int(digit) for digit in str(t2_val)]) // 10 == c2_val
 
-            problem.constraints.append(BinaryConstraint((result, t3), condition_d_t3))
-            problem.constraints.append(BinaryConstraint((c2, t3), condition_c2_t3))
-
-            # t2 (digits sum) = t3 (digits sum)
-            def condition_t2_t3(t2_val, t3_val):
-                return sum([int(digit) for digit in str(t2_val)]) == sum([int(digit) for digit in str(t3_val)])
-
-            problem.constraints.append(BinaryConstraint((t2, t3), condition_t2_t3))
+            problem.constraints.append(BinaryConstraint((t2, result), condition_t2_result))
+            problem.constraints.append(BinaryConstraint((t2, c2), condition_t2_c2))
 
             print(f'{var1} + {var2} + {c1} = {result} + {c2}')
             print(f'{t1} = ({var1} , {var2})')
             print(f'{t2} = ({c1} , {t1})')
-            print(f'{t3} = ({c2} , {result})')
-            print(f'{t2} sum = {t3} sum')
 
         def sum_var_and_carry(var, c1, result, i):
             # a + c1 = x1 (concatenate a and c1) domain: [0, 19]
@@ -171,6 +159,7 @@ class CryptArithmeticProblem(Problem):
         def equal_carry_and_result(c1, result):
             def condition_c1_result(c1_val, result_val):
                 return c1_val == result_val
+
             problem.constraints.append(BinaryConstraint((c1, result), condition_c1_result))
             print(f'{c1} = {result}')
 
