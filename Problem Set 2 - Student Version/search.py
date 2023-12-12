@@ -175,5 +175,34 @@ def alphabeta_with_move_ordering(game: Game[S, A], state: S, heuristic: Heuristi
 # Hint: Read the hint for minimax, but note that the monsters (turn > 0) do not act as min nodes anymore,
 # they now act as chance nodes (they act randomly).
 def expectimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
-    #TODO: Complete this function
-    NotImplemented()
+    hue = heuristic(game, state, 0)
+    terminal, values = game.is_terminal(state)
+    if terminal:
+        return values[0], None
+    if max_depth == 0:
+        return hue, None 
+
+    actions = game.get_actions(state)
+    def expectation_function(state: S) -> float:
+        value = 0
+        for a in actions:
+            successor = game.get_successor(state, a)
+            v, _ = expectimax(game, successor, heuristic, max_depth- 1)
+            value += v
+        return value/len(actions), None
+    
+    def max_function(state: S) -> Tuple[float, A]:
+        value = float('-inf')
+        action = None
+        for a in actions:
+            successor = game.get_successor(state, a)
+            v, _ = expectimax(game, successor, heuristic, max_depth-1)
+            if v > value:
+                value = v
+                action = a
+        return value, action
+    turn = game.get_turn(state)
+    if turn == 0:
+        return max_function(state)
+    else:
+        return expectation_function(state)
