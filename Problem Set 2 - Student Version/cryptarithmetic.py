@@ -126,12 +126,16 @@ class CryptArithmeticProblem(Problem):
             problem.constraints.append(BinaryConstraint((t2, result), condition_t2_result))
             problem.constraints.append(BinaryConstraint((t2, c2), condition_t2_c2))
 
-            print(f'{var1} + {var2} + {c1} = {result} + {c2}')
-            print(f'{t1} = ({var1} , {var2})')
-            print(f'{t2} = ({c1} , {t1})')
+            # print(f'{var1} + {var2} + {c1} = {result} + {c2}')
+            # print(f'{t1} = ({var1} , {var2})')
+            # print(f'{t2} = ({c1} , {t1})')
 
         def sum_var_and_carry(var, c1, result, i):
-            # a + c1 = x1 (concatenate a and c1) domain: [0, 19]
+            # a + c1 = x1 + c2 (concatenate a and c1) domain: [0, 19]
+            # add c2 to the problem
+            c2 = f"c{i}"
+            problem.variables.append(c2)
+            problem.domains[c2] = set(range(2))
             # add x1 to the problem
             x1 = f"x1{i}"
             problem.variables.append(x1)
@@ -148,20 +152,23 @@ class CryptArithmeticProblem(Problem):
 
             # x1 = result
             def condition_x1_result(x1_val, result_val):
-                return sum([int(digit) for digit in str(x1_val)]) == result_val
+                return sum([int(digit) for digit in str(x1_val)]) % 10 == result_val
+
+            def condition_x1_c2(x1_val, c2_val):
+                return sum([int(digit) for digit in str(x1_val)]) // 10 == c2_val
 
             problem.constraints.append(BinaryConstraint((x1, result), condition_x1_result))
+            problem.constraints.append(BinaryConstraint((x1, c2), condition_x1_c2))
 
-            print(f'{var} + {c1} = {result}')
-            print(f'{x1} = ({c1} , {var})')
-            print(f'{x1} sum = {result} sum')
+            # print(f'{var} + {c1} = {result} + {c2}')
+            # print(f'{x1} = ({c1} , {var})')
 
         def equal_carry_and_result(c1, result):
             def condition_c1_result(c1_val, result_val):
                 return c1_val == result_val
 
             problem.constraints.append(BinaryConstraint((c1, result), condition_c1_result))
-            print(f'{c1} = {result}')
+            # print(f'{c1} = {result}')
 
         carry = "c0"
         # add c10 to the problem
@@ -184,13 +191,17 @@ class CryptArithmeticProblem(Problem):
             result = RHS[i]
             sum_var_and_carry(var, carry, result, i + 1)
 
-        carry = f"c{max_len}"
+        if len(RHS) > max_len:
+            carry = f"c{max_len}"
+            # equal carry and result
+            equal_carry_and_result(carry, RHS[max_len])
+        else:
+            # carry must be 0
+            carry = f"c{max_len}"
+            problem.constraints.append(UnaryConstraint(carry, lambda x: x == 0))
 
-        # equal carry and result
-        equal_carry_and_result(carry, RHS[max_len])
-
-        print(len(problem.variables))
-        print(len(problem.domains))
+        # print(len(problem.variables))
+        # print(len(problem.domains))
         return problem
 
     # Read a cryptarithmetic puzzle from a file
