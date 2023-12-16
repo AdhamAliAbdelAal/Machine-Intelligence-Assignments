@@ -81,7 +81,7 @@ class CryptArithmeticProblem(Problem):
         min_len = min(len(LHS0), len(LHS1))
 
         def generate_summation_with_carry(var1, var2, result, c1, i):
-            # a + b + c1 = d + c2 
+            # a + b + c1 = d + c2 * 10
             # a, b, d in [0, 9] and c1, c2 in [0, 1] 
             # add c2 to the problem
             c2 = f"c{i}"

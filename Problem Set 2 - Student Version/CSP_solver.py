@@ -141,5 +141,4 @@ def backtracking_search(problem: Problem, assignment: Assignment, domains: Dict[
             if result is not None:
                 return result
             assignment.pop(variable)
-    domains = copy.deepcopy(domains_copy)
     return None
