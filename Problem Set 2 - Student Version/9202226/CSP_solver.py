@@ -43,7 +43,6 @@ def minimum_remaining_values(problem: Problem, domains: Dict[str, set]) -> str:
 #            since they contain the current domains of unassigned variables only.
 def forward_checking(problem: Problem, assigned_variable: str, assigned_value: Any, domains: Dict[str, set]) -> bool:
     #TODO: Write this function
-    # get all binary constraints that involve the assigned variable
     binary_constraints = [constraint for constraint in problem.constraints if isinstance(constraint, BinaryConstraint) and assigned_variable in constraint.variables]
 
     for constraint in binary_constraints:
@@ -53,17 +52,12 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
         if other_variable not in domains:
             continue
         # update the other variable's domain 
-        # temp_set is the set of values that do not satisfy the constraint
         temp_set = set()
         for value in domains[other_variable]:
-            # get the value of the first variable in the constraint
             first_value = assigned_value if assigned_variable == constraint.variables[0] else value
-            # get the value of the second variable in the constraint
             second_value = assigned_value if assigned_variable == constraint.variables[1] else value
-            # if the value does not satisfy the constraint, add it to the temp_set
             if not constraint.condition(first_value, second_value):
                 temp_set.add(value)
-        # remove the values in the temp_set from the other variable's domain
         domains[other_variable] -= temp_set
         # if any variable's domain becomes empty, return False
         if len(domains[other_variable]) == 0:
@@ -84,13 +78,9 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
 #            since they contain the current domains of unassigned variables only.
 import copy
 def least_restraining_values(problem: Problem, variable_to_assign: str, domains: Dict[str, set]) -> List[Any]:
-    # get all binary constraints that involve the assigned variable
     binary_constraints = [constraint for constraint in problem.constraints if isinstance(constraint, BinaryConstraint) and variable_to_assign in constraint.variables]
-    # sort the values in the variable's domain based on the least restraining value heuristic
     def sort_key(assigned_value):
-        # neighbors is the set of variables that are involved in the binary constraints with the assigned variable
         neighbors = set()      
-        # make a copy of the domains
         domains_copy = copy.deepcopy(domains)
         for constraint in binary_constraints:
             # get the other involved variable
@@ -99,20 +89,16 @@ def least_restraining_values(problem: Problem, variable_to_assign: str, domains:
             if other_variable not in domains_copy:
                 continue
             neighbors.add(other_variable)
-            # update the other variable's domain
             temp = set()
             for value in domains_copy[other_variable]:
                 first_value = assigned_value if variable_to_assign == constraint.variables[0] else value
                 second_value = assigned_value if variable_to_assign == constraint.variables[1] else value
                 if not constraint.condition(first_value, second_value):
                     temp.add(value)
-            # remove the values in the temp_set from the other variable's domain
             domains_copy[other_variable] -= temp
-        # count is the number of values in the neighbors' domains
         count = 0
         for neighbor in neighbors:
             count += len(domains_copy[neighbor])
-        # return the count and the negative of the assigned value to sort the values in ascending order if they have the same count
         return (count, -assigned_value)
     return sorted(list(domains[variable_to_assign]), key=sort_key, reverse=True)
 
@@ -141,28 +127,18 @@ def solve(problem: Problem) -> Optional[Assignment]:
     return ret
 
 def backtracking_search(problem: Problem, assignment: Assignment, domains: Dict[str,set]) -> Optional[Assignment]:
-    # if the assignment is complete, return it
     if problem.is_complete(assignment):
         return assignment
-    # get the variable that should be picked based on the MRV heuristic
     variable = minimum_remaining_values(problem, domains)
-    # get the values of the variable based on the least restraining value heuristic
     values = least_restraining_values(problem, variable, domains)
-    # make a copy of the domains
     domains_copy = copy.deepcopy(domains)
     for value in values:
         domains = copy.deepcopy(domains_copy)
-        # remove the variable from the domains
         domains.pop(variable)
-        # if the assignment is not consistent, skip this value
         if forward_checking(problem, variable, value, domains):
-            # add the variable and its value to the assignment
             assignment[variable] = value
-            # get the result of backtracking search
             result = backtracking_search(problem, assignment, domains)
-            # if the result is not None, return it
             if result is not None:
                 return result
-            # remove the variable from the assignment
             assignment.pop(variable)
     return None

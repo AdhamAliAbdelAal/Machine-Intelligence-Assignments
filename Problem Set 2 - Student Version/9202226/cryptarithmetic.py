@@ -72,12 +72,14 @@ class CryptArithmeticProblem(Problem):
         for var in problem.variables:
             problem.domains[var] = set(range(10))
 
+        print(f'{LHS0} + {LHS1} = {RHS}')
+
         # reverse each string
         LHS0 = LHS0[::-1]
         LHS1 = LHS1[::-1]
         RHS = RHS[::-1]
         min_len = min(len(LHS0), len(LHS1))
-        # sum 2 vars and carry
+
         def generate_summation_with_carry(var1, var2, result, c1, i):
             # a + b + c1 = d + c2 * 10
             # a, b, d in [0, 9] and c1, c2 in [0, 1] 
@@ -124,8 +126,10 @@ class CryptArithmeticProblem(Problem):
             problem.constraints.append(BinaryConstraint((t2, result), condition_t2_result))
             problem.constraints.append(BinaryConstraint((t2, c2), condition_t2_c2))
 
-            
-        # sum var and carry
+            # print(f'{var1} + {var2} + {c1} = {result} + {c2}')
+            # print(f'{t1} = ({var1} , {var2})')
+            # print(f'{t2} = ({c1} , {t1})')
+
         def sum_var_and_carry(var, c1, result, i):
             # a + c1 = x1 + c2 (concatenate a and c1) domain: [0, 19]
             # add c2 to the problem
@@ -142,22 +146,20 @@ class CryptArithmeticProblem(Problem):
 
             def condition_c1_x1(c1_val, x1_val):
                 return c1_val == x1_val // 10
-            
-            # add constraints
+
             problem.constraints.append(BinaryConstraint((var, x1), condition_a_x1))
             problem.constraints.append(BinaryConstraint((c1, x1), condition_c1_x1))
 
+            # x1 = result
             def condition_x1_result(x1_val, result_val):
                 return sum([int(digit) for digit in str(x1_val)]) % 10 == result_val
 
             def condition_x1_c2(x1_val, c2_val):
                 return sum([int(digit) for digit in str(x1_val)]) // 10 == c2_val
-            
-            # add constraints
+
             problem.constraints.append(BinaryConstraint((x1, result), condition_x1_result))
             problem.constraints.append(BinaryConstraint((x1, c2), condition_x1_c2))
 
-        # make var and carry equal
         def equal_carry_and_result(c1, result):
             def condition_c1_result(c1_val, result_val):
                 return c1_val == result_val

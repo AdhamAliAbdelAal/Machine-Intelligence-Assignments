@@ -30,23 +30,19 @@ def greedy(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: 
 # get values[0].
 def minimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
     hue = heuristic(game, state, 0)
-    # check if terminal
     terminal, values = game.is_terminal(state)
     if terminal:
         return values[0], None
-    # check if max depth
     if max_depth == 0:
         return hue, None 
-    # get actions
+
     actions = game.get_actions(state)
-    # define min and max functions
     def min_function(state: S) -> Tuple[float, A]:
         value = float('inf')
         action = None
         for a in actions:
             successor = game.get_successor(state, a)
             v, _ = minimax(game, successor, heuristic, max_depth- 1)
-            # minimize value
             if v < value:
                 value = v
                 action = a
@@ -58,14 +54,11 @@ def minimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth:
         for a in actions:
             successor = game.get_successor(state, a)
             v, _ = minimax(game, successor, heuristic, max_depth-1)
-            # maximize value
             if v > value:
                 value = v
                 action = a
         return value, action
-    # get turn
     turn = game.get_turn(state)
-    # if my turn, maximize else minimize
     if turn == 0:
         return max_function(state)
     else:
@@ -94,10 +87,8 @@ def alphabeta(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_dept
                 for a in actions:
                     successor = game.get_successor(state, a)
                     v, _ = solve(successor, max_depth- 1, alpha, beta)
-                    # prune
                     if(v <= alpha):
                         return v, a
-                    # update my beta
                     beta = min(beta, v)
                     if v < value:
                         value = v
@@ -110,10 +101,8 @@ def alphabeta(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_dept
                 for a in actions:
                     successor = game.get_successor(state, a)
                     v, _ = solve(successor, max_depth- 1, alpha, beta)
-                    # prune
                     if(v >= beta):
                         return v, a
-                    # update my alpha
                     alpha = max(alpha, v)
                     if v > value:
                         value = v
@@ -124,7 +113,6 @@ def alphabeta(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_dept
                 return max_function(state, alpha, beta)
             else:
                 return min_function(state, alpha, beta)
-    # initialize alpha and beta with -inf and inf
     return solve(state, max_depth, float('-inf'), float('inf'))
 
 # Apply Alpha Beta pruning with move ordering and return the tree value and the best action
@@ -142,12 +130,10 @@ def alphabeta_with_move_ordering(game: Game[S, A], state: S, heuristic: Heuristi
             def min_function(state: S, alpha: float, beta: float) -> Tuple[float, A]:
                 value = float('inf')
                 action = None
-                # sort actions based on heuristic
                 def order(a):
                     successor = game.get_successor(state, a)
                     v = heuristic(game, successor, 0)
                     return v
-                # sort ascending
                 actions.sort(key=order)
                 for a in actions:
                     successor = game.get_successor(state, a)
@@ -163,12 +149,10 @@ def alphabeta_with_move_ordering(game: Game[S, A], state: S, heuristic: Heuristi
             def max_function(state: S, alpha: int, beta: int) -> Tuple[float, A]:
                 value = float('-inf')
                 action = None
-                # sort actions based on heuristic
                 def order(a):
                     successor = game.get_successor(state, a)
                     v = heuristic(game, successor, 0)
                     return v
-                # sort descending
                 actions.sort(key=order, reverse=True)
                 for a in actions:
                     successor = game.get_successor(state, a)
@@ -205,7 +189,6 @@ def expectimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_dep
             successor = game.get_successor(state, a)
             v, _ = expectimax(game, successor, heuristic, max_depth- 1)
             value += v
-        # get the expectation by dividing by the number of actions
         return value/len(actions), None
     
     def max_function(state: S) -> Tuple[float, A]:
@@ -219,7 +202,6 @@ def expectimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_dep
                 action = a
         return value, action
     turn = game.get_turn(state)
-    # if my turn, maximize else get expectation
     if turn == 0:
         return max_function(state)
     else:
