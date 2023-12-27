@@ -62,6 +62,7 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             for y in range(self.height) 
             if Point(x, y) not in snake_positions
         ]
+        # print(possible_points)
         return self.rng.choice(possible_points)
 
     def reset(self, seed: Optional[int] = None) -> Point:
@@ -144,16 +145,14 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             if new_head == self.apple:
                 # append the new point in the snake tail in the same direction as the snake tail
                 self.snake.append(temp_tail)
-                # generate a new apple
-                self.apple = self.generate_random_apple()
                 reward += 1
-            # check if the snake wins
-            if len(self.snake) == self.width * self.height:
-                done = True
-                reward += 100
-                if new_head in self.snake[1:]:
+                # check if the snake wins
+                if len(self.snake) == self.width * self.height:
                     done = True
-                    reward = 100
+                    reward += 100
+                else :
+                    # generate a new apple
+                    self.apple = self.generate_random_apple()
         # print(f'after: {self.snake}')
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
         return observation, reward, done, {}
