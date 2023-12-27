@@ -78,8 +78,9 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             self.rng.seed(seed) # Initialize the random generator using the seed
         # TODO add your code here
         # IMPORTANT NOTE: Define the snake before calling generate_random_apple
-        NotImplemented()
-
+        self.snake = [Point(self.width//2, self.height//2)]
+        self.direction = Direction.LEFT
+        self.apple = self.generate_random_apple()
         return SnakeObservation(tuple(self.snake), self.direction, self.apple)
 
     def actions(self) -> List[Direction]:
@@ -92,7 +93,14 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
         # TODO add your code here
         # a snake can wrap around the grid
         # NOTE: The action order does not matter
-        NotImplemented()
+        actions = [Direction.NONE]
+        if self.direction == Direction.RIGHT or self.direction == Direction.LEFT: 
+            actions.append(Direction.UP)
+            actions.append(Direction.DOWN)
+        elif self.direction == Direction.UP or self.direction == Direction.DOWN:
+            actions.append(Direction.RIGHT)
+            actions.append(Direction.LEFT)
+        return actions
 
     def step(self, action: Direction) -> \
             Tuple[SnakeObservation, float, bool, Dict]:
@@ -110,12 +118,34 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             - info (Dict): A dictionary containing any extra information. You can keep it empty.
         """
         # TODO Complete the following function
-        NotImplemented()
-
+        # print(self.snake)
         done = False
         reward = 0
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
-        
+        # right = 0, up = 1, left = 2, down = 3
+        dy = [0, -1, 0, 1]
+        dx = [1, 0, -1, 0]
+        if action != Direction.NONE:
+            self.direction = action
+        # update every point in the snake
+        for i in range(len(self.snake)):
+            self.snake[i] = Point((self.snake[i].x + dx[self.direction]) % self.width, (self.snake[i].y + dy[self.direction]) % self.height)
+        # check if the snake bites itself
+        if len(set(self.snake)) != len(self.snake):
+            reward -= 100
+            done = True
+            observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
+            return observation, reward, done, {}
+        # check if the snake eats the apple
+        elif self.snake[0] == self.apple:
+            reward += 1
+            # append new point to the snake from the tail in the direction of the tail
+            self.snake.append(Point((self.snake[-1].x - dx[self.direction]) % self.width, (self.snake[-1].y - dy[self.direction]) % self.height))
+            self.apple = self.generate_random_apple()
+            if len(self.snake) == self.width * self.height:
+                reward += 100
+                done = True
+        observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
         return observation, reward, done, {}
 
     ###########################
