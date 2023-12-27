@@ -4,6 +4,7 @@ from environment import Environment
 from mdp import MarkovDecisionProcess, S, A
 import json
 from helpers.utils import NotImplemented
+import copy
 
 # This is a class for a generic Value Iteration agent
 class ValueIterationAgent(Agent[S, A]):
@@ -22,27 +23,77 @@ class ValueIterationAgent(Agent[S, A]):
     # if the state is terminal, return 0
     def compute_bellman(self, state: S) -> float:
         #TODO: Complete this function
-        NotImplemented()
+        actions = self.mdp.get_actions(state)
+        # print(actions)
+        if self.mdp.is_terminal(state):
+            return 0
+        else:
+            best_utility = float('-inf')
+            for action in actions:
+                # print(f'action: {action}')
+                action_utility = 0
+                successors = self.mdp.get_successor(state, action)
+                for successor, prob in successors.items():
+                    reward = self.mdp.get_reward(state, action, successor)
+                    # print(f'successor: {successor}, reward: {reward}')
+                    utility = self.utilities[successor]
+                    current_utility = prob * (reward + self.discount_factor * utility)
+                    # print(f'current_utility: {current_utility}')
+                    action_utility += current_utility
+                best_utility = max(best_utility, action_utility)
+            return best_utility
+                    
+
     
     # Applies a single utility update
     # then returns True if the utilities has converged (the maximum utility change is less or equal the tolerance)
     # and False otherwise
     def update(self, tolerance: float = 0) -> bool:
-        #TODO: Complete this function
-        NotImplemented()
+        temp = copy.deepcopy(self.utilities)
+        # print("update")
+        # print(self.utilities)
+        max_change = float('-inf')
+        states = self.mdp.get_states()
+        for state in states:
+            temp[state] = self.compute_bellman(state)
+            max_change = max(max_change, abs(self.utilities[state] - temp[state]))
+        # print(max_change)
+        self.utilities = temp
+        # print(self.utilities)
+        if max_change <= tolerance:
+            return True
+        else:
+            return False
 
     # This function applies value iteration starting from the current utilities stored in the agent and stores the new utilities in the agent
     # NOTE: this function does incremental update and does not clear the utilities to 0 before running
     # In other words, calling train(M) followed by train(N) is equivalent to just calling train(N+M)
     def train(self, iterations: Optional[int] = None, tolerance: float = 0) -> int:
         #TODO: Complete this function to apply value iteration for the given number of iterations
-        NotImplemented()
+        for i in range(iterations):
+            if self.update(tolerance):
+                return i+1
     
     # Given an environment and a state, return the best action as guided by the learned utilities and the MDP
     # If the state is terminal, return None
     def act(self, env: Environment[S, A], state: S) -> A:
-        #TODO: Complete this function
-        NotImplemented()
+        if self.mdp.is_terminal(state):
+            return None
+        else:
+            actions = self.mdp.get_actions(state)
+            best_utility = float('-inf')
+            best_action = None
+            for action in actions:
+                action_utility = 0
+                successors = self.mdp.get_successor(state, action)
+                for successor, prob in successors.items():
+                    reward = self.mdp.get_reward(state, action, successor)
+                    utility = self.utilities[successor]
+                    action_utility += prob * (reward + self.discount_factor * utility)
+                if action_utility > best_utility:
+                    best_utility = action_utility
+                    best_action = action
+            return best_action
     
     # Save the utilities to a json file
     def save(self, env: Environment[S, A], file_path: str):
