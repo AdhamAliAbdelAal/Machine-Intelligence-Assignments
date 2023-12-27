@@ -4,8 +4,8 @@ def question2_1():
     #TODO: Choose options that would lead to the desired results 
     return {
         "noise": 0,
-        "discount_factor": 1,
-        "living_reward": 0
+        "discount_factor": 0.1,
+        "living_reward": -0.4
     }
 
 def question2_2():
