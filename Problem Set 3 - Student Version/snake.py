@@ -118,7 +118,7 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             - info (Dict): A dictionary containing any extra information. You can keep it empty.
         """
         # TODO Complete the following function
-        # print(self.snake)
+        # print(f'before: {self.snake}')
         done = False
         reward = 0
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
@@ -127,24 +127,34 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
         dx = [1, 0, -1, 0]
         if action != Direction.NONE:
             self.direction = action
-        # update every point in the snake
-        for i in range(len(self.snake)):
-            self.snake[i] = Point((self.snake[i].x + dx[self.direction]) % self.width, (self.snake[i].y + dy[self.direction]) % self.height)
-        # check if the snake bites itself
-        if len(set(self.snake)) != len(self.snake):
-            reward -= 100
+        # update head
+        head = self.snake[0]
+        new_head = Point(head.x + dx[self.direction], head.y + dy[self.direction])
+        # update the rest of the body by shifting the body
+        temp_tail = self.snake[-1]
+        for i in range(len(self.snake)-1, 0, -1):
+            self.snake[i] = self.snake[i-1]
+        self.snake[0] = new_head
+        # check if the snake eats itself
+        if new_head in self.snake[1:]:
             done = True
-            observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
-            return observation, reward, done, {}
-        # check if the snake eats the apple
-        elif self.snake[0] == self.apple:
-            reward += 1
-            # append new point to the snake from the tail in the direction of the tail
-            self.snake.append(Point((self.snake[-1].x - dx[self.direction]) % self.width, (self.snake[-1].y - dy[self.direction]) % self.height))
-            self.apple = self.generate_random_apple()
+            reward -= 100
+        else:
+            # check if the snake eats an apple
+            if new_head == self.apple:
+                # append the new point in the snake tail in the same direction as the snake tail
+                self.snake.append(temp_tail)
+                # generate a new apple
+                self.apple = self.generate_random_apple()
+                reward += 1
+            # check if the snake wins
             if len(self.snake) == self.width * self.height:
-                reward += 100
                 done = True
+                reward += 100
+                if new_head in self.snake[1:]:
+                    done = True
+                    reward = 100
+        # print(f'after: {self.snake}')
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
         return observation, reward, done, {}
 
