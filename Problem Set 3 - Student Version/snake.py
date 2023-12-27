@@ -129,7 +129,7 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             self.direction = action
         # update head
         head = self.snake[0]
-        new_head = Point(head.x + dx[self.direction], head.y + dy[self.direction])
+        new_head = Point((head.x + dx[self.direction])%self.width, (head.y + dy[self.direction])%self.height)
         # update the rest of the body by shifting the body
         temp_tail = self.snake[-1]
         for i in range(len(self.snake)-1, 0, -1):
