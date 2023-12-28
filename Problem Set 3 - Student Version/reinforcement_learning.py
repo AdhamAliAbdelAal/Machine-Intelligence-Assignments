@@ -234,32 +234,23 @@ class ApproximateQLearningAgent(RLAgent[S, A]):
     # Given the features of a state, compute and return the utility of the state using the function "__compute_q_from_features"
     def __compute_utility_from_features(self, features: Dict[str, float]) -> float:
         # TODO: Complete this function
-        # utility = max_{action} Q(state, action)
-        actions = self.actions
-        utility = max([self.__compute_q_from_features(features, action) for action in actions])
+        utility = max([self.__compute_q_from_features(features, action) for action in self.actions])
         return utility
 
     def compute_q(self, env: Environment[S, A], state: S, action: A) -> float:
         features = self.feature_extractor.extract_features(env, state)
         return self.__compute_q_from_features(features, action)
-    
-    def compute_utility(self, env: Environment[S, A], state: S) -> float:
-        features = self.feature_extractor.extract_features(env, state)
-        return self.__compute_utility_from_features(features)
 
     # Update the value of Q(state, action) using this transition via the Q-Learning update rule
     def update(self, env: Environment[S, A], state: S, action: A, reward: float, next_state: S, done: bool):
         # TODO: Complete this function to update weights using the Q-Learning update rule
         # If done is True, then next_state is a terminal state in which case, we consider the Q-value of next_state to be 0
         q = self.compute_q(env, state, action)
-        utility = self.compute_utility(env, next_state)
+        utility = max([self.compute_q(env, next_state, next_action) for next_action in self.actions]) if not done else 0
         difference = reward + self.discount_factor * utility - q
         features = self.feature_extractor.extract_features(env, state)
         for feature, value in features.items():
-            wi = value
-            self.weights[action][feature] = self.weights[action][feature] + self.learning_rate * difference * wi
-
-
+            self.weights[action][feature] = self.weights[action][feature] + self.learning_rate * difference * value
 
     # Save the weights to a json file
     def save(self, env: Environment[S, A], file_path: str):
