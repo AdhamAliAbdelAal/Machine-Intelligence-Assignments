@@ -226,27 +226,38 @@ class ApproximateQLearningAgent(RLAgent[S, A]):
     def __compute_q_from_features(self, features: Dict[str, float], action: A) -> float:
         # TODO: Complete this function
         # NOTE: Remember to cast the action to string before quering self.weights
-        action_str = str(action)
         q = 0
         for feature, value in features.items():
-            q += self.weights[action_str][feature] * value
+            q += (self.weights[action][feature] * value)
         return q
 
     # Given the features of a state, compute and return the utility of the state using the function "__compute_q_from_features"
     def __compute_utility_from_features(self, features: Dict[str, float]) -> float:
         # TODO: Complete this function
-        NotImplemented()
+        # utility = max_{action} Q(state, action)
+        actions = self.actions
+        utility = max([self.__compute_q_from_features(features, action) for action in actions])
+        return utility
 
     def compute_q(self, env: Environment[S, A], state: S, action: A) -> float:
         features = self.feature_extractor.extract_features(env, state)
         return self.__compute_q_from_features(features, action)
+    
+    def compute_utility(self, env: Environment[S, A], state: S) -> float:
+        features = self.feature_extractor.extract_features(env, state)
+        return self.__compute_utility_from_features(features)
 
     # Update the value of Q(state, action) using this transition via the Q-Learning update rule
     def update(self, env: Environment[S, A], state: S, action: A, reward: float, next_state: S, done: bool):
         # TODO: Complete this function to update weights using the Q-Learning update rule
         # If done is True, then next_state is a terminal state in which case, we consider the Q-value of next_state to be 0
-        action_str = str(action)
+        q = self.compute_q(env, state, action)
+        utility = self.compute_utility(env, next_state)
+        difference = reward + self.discount_factor * utility - q
         features = self.feature_extractor.extract_features(env, state)
+        for feature, value in features.items():
+            wi = value
+            self.weights[action][feature] = self.weights[action][feature] + self.learning_rate * difference * wi
 
 
 
