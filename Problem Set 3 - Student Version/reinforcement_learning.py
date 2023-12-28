@@ -3,6 +3,7 @@ from agents import Agent
 from environment import Environment, S, A
 from helpers.mt19937 import RandomGenerator
 from helpers.utils import NotImplemented
+import copy
 
 import json
 from collections import defaultdict
@@ -91,7 +92,7 @@ class SARSALearningAgent(RLAgent[S, A]):
     def update(self, env: Environment[S, A], state: S, action: A, reward: float, next_state: S, next_action: Optional[A]):
         # TODO: Complete this function to update Q-table using the SARSA update rule
         # If next_action is None, then next_state is a terminal state in which case, we consider the Q-value of next_state to be 0
-        NotImplemented()
+        self.Q[state][action] = self.Q[state][action] + self.learning_rate * (reward + self.discount_factor * self.compute_q(env, next_state, next_action) - self.Q[state][action])
 
     # Save the Q-table to a json file
     def save(self, env: Environment[S, A], file_path: str):
@@ -225,7 +226,11 @@ class ApproximateQLearningAgent(RLAgent[S, A]):
     def __compute_q_from_features(self, features: Dict[str, float], action: A) -> float:
         # TODO: Complete this function
         # NOTE: Remember to cast the action to string before quering self.weights
-        NotImplemented()
+        action_str = str(action)
+        q = 0
+        for feature, value in features.items():
+            q += self.weights[action_str][feature] * value
+        return q
 
     # Given the features of a state, compute and return the utility of the state using the function "__compute_q_from_features"
     def __compute_utility_from_features(self, features: Dict[str, float]) -> float:
@@ -240,7 +245,10 @@ class ApproximateQLearningAgent(RLAgent[S, A]):
     def update(self, env: Environment[S, A], state: S, action: A, reward: float, next_state: S, done: bool):
         # TODO: Complete this function to update weights using the Q-Learning update rule
         # If done is True, then next_state is a terminal state in which case, we consider the Q-value of next_state to be 0
-        NotImplemented()
+        action_str = str(action)
+        features = self.feature_extractor.extract_features(env, state)
+
+
 
     # Save the weights to a json file
     def save(self, env: Environment[S, A], file_path: str):
