@@ -44,11 +44,20 @@ class RLAgent(Agent[S, A]):
         actions = env.actions()
         if training and self.should_explore():
             # TODO: Return a random action whose index is "self.rng.int(0, len(actions)-1)"
-            NotImplemented()
+            index = self.rng.int(0, len(actions)-1)
+            return actions[index]
         else:
             # TODO: return the action with the maximum q-value as calculated by "compute_q" above
             # if more than one action has the maximum q-value, return the one that appears first in the "actions" list
-            NotImplemented()
+            max_q = float('-inf')
+            max_action = None
+            for action in actions:
+                q = self.compute_q(env, observation, action)
+                if q > max_q:
+                    max_q = q
+                    max_action = action
+            return max_action
+
 
 #############################
 #######     SARSA      ######
@@ -135,13 +144,17 @@ class QLearningAgent(RLAgent[S, A]):
     # Given a state, compute and return the utility of the state using the function "compute_q"
     def compute_utility(self, env: Environment[S, A], state: S) -> float:
         # TODO: Complete this function.
-        NotImplemented()
+        # utility = max_{action} Q(state, action)
+        # get all possible actions from the environment
+        actions = env.actions()
+        utility = max([self.compute_q(env, state, action) for action in actions])
+        return utility
 
     # Update the value of Q(state, action) using this transition via the Q-Learning update rule
     def update(self, env: Environment[S, A], state: S, action: A, reward: float, next_state: S, done: bool):
         # TODO: Complete this function to update Q-table using the Q-Learning update rule
         # If done is True, then next_state is a terminal state in which case, we consider the Q-value of next_state to be 0
-        NotImplemented()
+        self.Q[state][action] = self.Q[state][action] + self.learning_rate * (reward + self.discount_factor * self.compute_utility(env, next_state) - self.Q[state][action])
 
     # Save the Q-table to a json file
     def save(self, env: Environment[S, A], file_path: str):
