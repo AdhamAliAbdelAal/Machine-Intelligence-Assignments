@@ -22,44 +22,47 @@ class ValueIterationAgent(Agent[S, A]):
     # Given a state, compute its utility using the bellman equation
     # if the state is terminal, return 0
     def compute_bellman(self, state: S) -> float:
-        #TODO: Complete this function
+        # get all actions
         actions = self.mdp.get_actions(state)
-        # print(actions)
+        # if terminal state, return 0  
         if self.mdp.is_terminal(state):
             return 0
         else:
+            # initialize best utility to be -inf
             best_utility = float('-inf')
             for action in actions:
-                # print(f'action: {action}')
                 action_utility = 0
+                # get all successors
                 successors = self.mdp.get_successor(state, action)
                 for successor, prob in successors.items():
+                    # get reward and utility
                     reward = self.mdp.get_reward(state, action, successor)
-                    # print(f'successor: {successor}, reward: {reward}')
                     utility = self.utilities[successor]
+                    # compute current utility
                     current_utility = prob * (reward + self.discount_factor * utility)
-                    # print(f'current_utility: {current_utility}')
+                    # add to action utility
                     action_utility += current_utility
+                # update best utility
                 best_utility = max(best_utility, action_utility)
             return best_utility
                     
-
     
     # Applies a single utility update
     # then returns True if the utilities has converged (the maximum utility change is less or equal the tolerance)
     # and False otherwise
     def update(self, tolerance: float = 0) -> bool:
         temp = copy.deepcopy(self.utilities)
-        # print("update")
-        # print(self.utilities)
-        max_change = float('-inf')
+        # initialize max_change to be 0
+        max_change = 0.0
         states = self.mdp.get_states()
         for state in states:
+            # compute bellman equation
             temp[state] = self.compute_bellman(state)
+            # update max_change
             max_change = max(max_change, abs(self.utilities[state] - temp[state]))
-        # print(max_change)
+        # update utilities with temp utilities
         self.utilities = temp
-        # print(self.utilities)
+        # check convergence
         if max_change <= tolerance:
             return True
         else:
@@ -69,9 +72,10 @@ class ValueIterationAgent(Agent[S, A]):
     # NOTE: this function does incremental update and does not clear the utilities to 0 before running
     # In other words, calling train(M) followed by train(N) is equivalent to just calling train(N+M)
     def train(self, iterations: Optional[int] = None, tolerance: float = 0) -> int:
-        #TODO: Complete this function to apply value iteration for the given number of iterations
         for i in range(iterations):
+            # update utilities
             if self.update(tolerance):
+                # return number of iterations 1-indexed
                 return i+1
     
     # Given an environment and a state, return the best action as guided by the learned utilities and the MDP
@@ -80,17 +84,24 @@ class ValueIterationAgent(Agent[S, A]):
         if self.mdp.is_terminal(state):
             return None
         else:
+            # get all actions
             actions = self.mdp.get_actions(state)
+            # initialize best utility to be -inf
             best_utility = float('-inf')
             best_action = None
             for action in actions:
                 action_utility = 0
+                # get all successors
                 successors = self.mdp.get_successor(state, action)
+                # compute utility for each successor
                 for successor, prob in successors.items():
                     reward = self.mdp.get_reward(state, action, successor)
                     utility = self.utilities[successor]
+                    # compute current utility
+                    # add to action utility
                     action_utility += prob * (reward + self.discount_factor * utility)
                 if action_utility > best_utility:
+                    # update best utility and action
                     best_utility = action_utility
                     best_action = action
             return best_action

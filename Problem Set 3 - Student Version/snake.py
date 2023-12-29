@@ -62,7 +62,6 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             for y in range(self.height) 
             if Point(x, y) not in snake_positions
         ]
-        # print(possible_points)
         return self.rng.choice(possible_points)
 
     def reset(self, seed: Optional[int] = None) -> Point:
@@ -77,10 +76,12 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
         """
         if seed is not None:
             self.rng.seed(seed) # Initialize the random generator using the seed
-        # TODO add your code here
         # IMPORTANT NOTE: Define the snake before calling generate_random_apple
+        # initial position of the snake is at the center of the grid
         self.snake = [Point(self.width//2, self.height//2)]
+        # initial direction of the snake is left
         self.direction = Direction.LEFT
+        # generate a random apple
         self.apple = self.generate_random_apple()
         return SnakeObservation(tuple(self.snake), self.direction, self.apple)
 
@@ -91,13 +92,15 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             A list of Directions, representing the possible actions that can be taken from the current state.
 
         """
-        # TODO add your code here
         # a snake can wrap around the grid
         # NOTE: The action order does not matter
+        # initially the actions contains NONE
         actions = [Direction.NONE]
+        # if the snake is moving right or left, it can move up or down
         if self.direction == Direction.RIGHT or self.direction == Direction.LEFT: 
             actions.append(Direction.UP)
             actions.append(Direction.DOWN)
+        # if the snake is moving up or down, it can move right or left
         elif self.direction == Direction.UP or self.direction == Direction.DOWN:
             actions.append(Direction.RIGHT)
             actions.append(Direction.LEFT)
@@ -118,8 +121,6 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             - done (bool): A boolean indicating whether the episode is over.
             - info (Dict): A dictionary containing any extra information. You can keep it empty.
         """
-        # TODO Complete the following function
-        # print(f'before: {self.snake}')
         done = False
         reward = 0
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
@@ -153,7 +154,6 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
                 else :
                     # generate a new apple
                     self.apple = self.generate_random_apple()
-        # print(f'after: {self.snake}')
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
         return observation, reward, done, {}
 
